@@ -43,6 +43,7 @@ export type Options = {
   plugins: Plugins;
   printFunctionName: boolean;
   theme: Theme;
+  showZeroWidthChars: boolean;
 };
 
 export type OptionsReceived = {
@@ -56,6 +57,7 @@ export type OptionsReceived = {
   plugins?: Plugins;
   printFunctionName?: boolean;
   theme?: ThemeReceived;
+  showZeroWidthChars?: boolean;
 };
 
 export type Config = {
@@ -70,6 +72,7 @@ export type Config = {
   printFunctionName: boolean;
   spacingInner: string;
   spacingOuter: string;
+  showZeroWidthChars: boolean;
 };
 
 export type Printer = (

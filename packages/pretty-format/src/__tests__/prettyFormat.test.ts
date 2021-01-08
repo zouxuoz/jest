@@ -849,4 +849,15 @@ describe('prettyFormat()', () => {
       }).toThrow();
     });
   });
+
+  it('print zero width chars { showZeroWidthChars: true }', () => {
+    expect(
+      prettyFormat(
+        ['\u200B', '\u200C', '\u200D', '\u2060', '\uFEFF'].join('a'),
+        {showZeroWidthChars: true},
+      ),
+    ).toEqual(
+      '\\u200B + "a" + \\u200C + "a" + \\u200D + "a" + \\u2060 + "a" + \\uFEFF',
+    );
+  });
 });

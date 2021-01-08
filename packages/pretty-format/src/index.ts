@@ -65,6 +65,7 @@ const isWindow = (val: unknown) =>
 
 const SYMBOL_REGEXP = /^Symbol\((.*)\)(.*)$/;
 const NEWLINE_REGEXP = /\n/gi;
+const ZERO_WIDTH_CHARS_REGEXP = /\u200B|\u200C|\u200D|\u2060|\uFEFF/g;
 
 class PrettyFormatPluginError extends Error {
   constructor(message: string, stack: string) {
@@ -123,6 +124,7 @@ function printBasicValue(
   printFunctionName: boolean,
   escapeRegex: boolean,
   escapeString: boolean,
+  showZeroWidthChars: boolean,
 ): string | null {
   if (val === true || val === false) {
     return '' + val;
@@ -144,8 +146,28 @@ function printBasicValue(
   }
   if (typeOf === 'string') {
     if (escapeString) {
-      return '"' + val.replace(/"|\\/g, '\\$&') + '"';
+      val = val.replace(/"|\\/g, '\\$&');
     }
+
+    if (showZeroWidthChars && ZERO_WIDTH_CHARS_REGEXP.test(val)) {
+      val = val.replace(
+        ZERO_WIDTH_CHARS_REGEXP,
+        (match: string, offset: number) => {
+          const code = `\\u${match.charCodeAt(0).toString(16).toUpperCase()}`;
+
+          if (offset === 0) {
+            return `${code} + "`;
+          } else if (offset === val.length - 1) {
+            return `" + ${code}`;
+          }
+
+          return `" + ${code} + "`;
+        },
+      );
+
+      return val;
+    }
+
     return '"' + val + '"';
   }
   if (typeOf === 'function') {
@@ -358,6 +380,7 @@ function printer(
     config.printFunctionName,
     config.escapeRegex,
     config.escapeString,
+    config.showZeroWidthChars,
   );
   if (basicResult !== null) {
     return basicResult;
@@ -396,6 +419,7 @@ const DEFAULT_OPTIONS: Options = {
   plugins: [],
   printFunctionName: true,
   theme: DEFAULT_THEME,
+  showZeroWidthChars: false,
 };
 
 function validateOptions(options: OptionsReceived) {
@@ -466,6 +490,11 @@ const getEscapeString = (options?: OptionsReceived) =>
     ? options.escapeString
     : DEFAULT_OPTIONS.escapeString;
 
+const getShowZeroWidthChars = (options?: OptionsReceived) =>
+  options && options.showZeroWidthChars !== undefined
+    ? options.showZeroWidthChars
+    : DEFAULT_OPTIONS.showZeroWidthChars;
+
 const getConfig = (options?: OptionsReceived): Config => ({
   callToJSON:
     options && options.callToJSON !== undefined
@@ -497,6 +526,7 @@ const getConfig = (options?: OptionsReceived): Config => ({
   printFunctionName: getPrintFunctionName(options),
   spacingInner: options && options.min ? ' ' : '\n',
   spacingOuter: options && options.min ? '' : '\n',
+  showZeroWidthChars: getShowZeroWidthChars(options),
 });
 
 function createIndent(indent: number): string {
@@ -524,6 +554,7 @@ export function format(val: unknown, options?: OptionsReceived): string {
     getPrintFunctionName(options),
     getEscapeRegex(options),
     getEscapeString(options),
+    getShowZeroWidthChars(options),
   );
   if (basicResult !== null) {
     return basicResult;

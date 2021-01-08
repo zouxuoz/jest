@@ -94,6 +94,7 @@ export const stringify = (object: unknown, maxDepth: number = 10): string => {
       maxDepth,
       min: true,
       plugins: PLUGINS,
+      showZeroWidthChars: true,
     });
   } catch {
     result = prettyFormat(object, {
@@ -101,6 +102,7 @@ export const stringify = (object: unknown, maxDepth: number = 10): string => {
       maxDepth,
       min: true,
       plugins: PLUGINS,
+      showZeroWidthChars: true,
     });
   }
 
